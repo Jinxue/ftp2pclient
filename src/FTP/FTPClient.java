@@ -1,3 +1,5 @@
+package FTP;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -12,18 +14,26 @@ import java.net.Socket;
 import java.util.StringTokenizer;
 
 /**
- * SimpleFTP is a simple package that implements a Java FTP client. With
+ * FTPClient is a simple package that implements a Java FTP client. With
  * SimpleFTP, you can connect to an FTP server and upload multiple files.
  * <p>
- * Copyright Paul Mutton, <a
- * href="http://www.jibble.org/">http://www.jibble.org/ </a>
+ * The initial version is by Paul Mutton, 
+ * <a href="http://www.jibble.org/">http://www.jibble.org/ </a>
  * 
+ * Zhang Jinxue has extended this client
  */
-public class SimpleFtp {
+
+public class FTPClient {
+
+	private Socket socket = null;
+	private BufferedReader reader = null;
+	private BufferedWriter writer = null;
+	private static boolean DEBUG = false;
+
 	/**
 	 * Create an instance of SimpleFTP.
 	 */
-	public SimpleFtp() {
+	public FTPClient() {
 	}
 
 	/**
@@ -49,7 +59,7 @@ public class SimpleFtp {
 			String pass) throws IOException {
 		if (socket != null) {
 			throw new IOException(
-					"SimpleFTP is already connected. Disconnect first.");
+					"FTPClient is already connected. Disconnect first.");
 		}
 		socket = new Socket(host, port);
 		reader = new BufferedReader(new InputStreamReader(socket
@@ -59,21 +69,21 @@ public class SimpleFtp {
 		String response = readLine();
 		if (!response.startsWith("220 ")) {
 			throw new IOException(
-					"SimpleFTP received an unknown response when connecting to the FTP server: "
+					"FTPClient received an unknown response when connecting to the FTP server: "
 							+ response);
 		}
 		sendLine("USER " + user);
 		response = readLine();
 		if (!response.startsWith("331 ")) {
 			throw new IOException(
-					"SimpleFTP received an unknown response after sending the user: "
+					"FTPClient received an unknown response after sending the user: "
 							+ response);
 		}
 		sendLine("PASS " + pass);
 		response = readLine();
 		if (!response.startsWith("230 ")) {
 			throw new IOException(
-					"SimpleFTP was unable to log in with the supplied password: "
+					"FTPClient was unable to log in with the supplied password: "
 							+ response);
 		}
 		// Now logged in.
@@ -123,7 +133,7 @@ public class SimpleFtp {
 	 */
 	public synchronized boolean stor(File file) throws IOException {
 		if (file.isDirectory()) {
-			throw new IOException("SimpleFTP cannot upload a directory.");
+			throw new IOException("FTPClient cannot upload a directory.");
 		}
 		String filename = file.getName();
 		return stor(new FileInputStream(file), filename);
@@ -140,7 +150,7 @@ public class SimpleFtp {
 		sendLine("PASV");
 		String response = readLine();
 		if (!response.startsWith("227 ")) {
-			throw new IOException("SimpleFTP could not request passive mode: "
+			throw new IOException("FTPClient could not request passive mode: "
 					+ response);
 		}
 		String ip = null;
@@ -157,7 +167,7 @@ public class SimpleFtp {
 						+ Integer.parseInt(tokenizer.nextToken());
 			} catch (Exception e) {
 				throw new IOException(
-						"SimpleFTP received bad data link information: "
+						"FTPClient received bad data link information: "
 								+ response);
 			}
 		}
@@ -166,7 +176,7 @@ public class SimpleFtp {
 		response = readLine();
 		if (!response.startsWith("150 ")) {
 			throw new IOException(
-					"SimpleFTP was not allowed to send the file: " + response);
+					"FTPClient was not allowed to send the file: " + response);
 		}
 		BufferedOutputStream output = new BufferedOutputStream(dataSocket
 				.getOutputStream());
@@ -207,7 +217,7 @@ public class SimpleFtp {
 	 */
 	private void sendLine(String line) throws IOException {
 		if (socket == null) {
-			throw new IOException("SimpleFTP is not connected.");
+			throw new IOException("FTPClient is not connected.");
 		}
 		try {
 			writer.write(line + "\r\n");
@@ -229,8 +239,4 @@ public class SimpleFtp {
 		return line;
 	}
 
-	private Socket socket = null;
-	private BufferedReader reader = null;
-	private BufferedWriter writer = null;
-	private static boolean DEBUG = false;
 }
