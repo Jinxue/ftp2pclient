@@ -31,6 +31,7 @@ public class FTPClient {
 	private BufferedReader reader = null;
 	private BufferedWriter writer = null;
 	private static boolean DEBUG = true;
+	private String serverIP = null;
 
 	// This is socket for data transmission
 	private Socket dataSocket = null;
@@ -68,6 +69,7 @@ public class FTPClient {
 	 */
 	public void connect(String host, int port, String user,
 			String pass) throws IOException {
+		serverIP = host;
 		if (socket != null) {
 			throw new IOException(
 					"FTPClient is already connected. Disconnect first.");
@@ -172,9 +174,36 @@ public class FTPClient {
 			// boolean co = dataSocket.isConnected();
 			// co = dataSocket.isClosed();
 			return true;
-		}
-//	}
+//		}
+	}
 	
+	/**
+	 * Set the data mode for IPv6
+	 */
+	public boolean setEPasv() throws IOException{
+		sendLine("EPSV 2");
+		String response = readLine();
+		if(response.startsWith("522 ")){
+			System.out.println("Sorry, the IPv6 protocol is not supported");
+			return false;
+		}
+		if (!response.startsWith("229 ")) {
+			throw new IOException(
+					"FTPClient could not request passive mode: " + response);
+		}
+		//String ip = null;
+		int port = -1;
+		int closing = response.lastIndexOf('|') - 1;
+		int opening = response.lastIndexOf('|', closing);
+		
+		if (closing > 0) {
+			String sPort = response.substring(opening + 1, closing + 1);
+			port = Integer.parseInt(sPort);
+		}
+		dataSocket = new Socket(serverIP, port);
+
+		return true;
+	} 
 	/**
 	 * PWD, STOR, RETR, LIST, DELE, RMD, MKD, RNFR/RMTO, and ABOR are the FTP
 	 * Service Commands
@@ -208,6 +237,7 @@ public class FTPClient {
 	
 	public boolean list(String filename) throws IOException {
 		setPasv();
+//		setEPasv();
 		if(filename.equals("./"))
 			sendLine("LIST ");
 		else

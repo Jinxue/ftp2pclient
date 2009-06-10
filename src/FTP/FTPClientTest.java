@@ -6,6 +6,9 @@ import java.io.IOException;
 public class FTPClientTest {
 
 	static String host = "166.111.80.101";
+	
+	//For IPv6 testing
+//	static String host = "fe80::21a:64ff:fea1:23c2";
 
 	static FTPClient client = null;
 	/**
@@ -54,6 +57,9 @@ public class FTPClientTest {
 		client.mkDirectory("hello");
 		client.rmDirectory("hello");
 		client.rename("conf-out.xml", "conf.xml");
+		
+		//For IPv6 test
+		client.setEPasv();
 		
 		client.disconnect();
 
