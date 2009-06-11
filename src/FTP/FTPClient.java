@@ -35,6 +35,8 @@ public class FTPClient {
 	private static boolean DEBUG = true;
 	private String serverIP = null;
 
+	private String localWD;
+	
 	// This is socket for data transmission
 	private Socket dataSocket = null;
 	/**
@@ -258,8 +260,8 @@ public class FTPClient {
 		while((info = dataReader.readLine()) != null){
 			totalInfo += info + "\r\n";
 		}
-		if(DEBUG)
-			System.out.println(totalInfo);
+//		if(DEBUG)
+//			System.out.println(totalInfo);
 		response = readLine();
 		return (response.startsWith("226 "));
 	}
@@ -286,8 +288,8 @@ public class FTPClient {
 			totalInfo += info + "\r\n";
 			fileList.add(info);
 		}
-		if(DEBUG)
-			System.out.println(totalInfo);
+//		if(DEBUG)
+//			System.out.println(totalInfo);
 		response = readLine();
 		return (response.startsWith("226 "));
 	}
@@ -353,7 +355,7 @@ public class FTPClient {
 			throw new IOException(
 					"FTPClient was not allowed to download the file: " + response);
 		}
-		BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(new File(filename)));
+		BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(new File(localWD, filename)));
 
 		BufferedInputStream input = new BufferedInputStream(dataSocket
 				.getInputStream());
@@ -466,6 +468,10 @@ public class FTPClient {
 			System.out.println("< " + line);
 		}
 		return line;
+	}
+
+	public void setLocalWD(String path){
+		localWD = path;
 	}
 
 }
