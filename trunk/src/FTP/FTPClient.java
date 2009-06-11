@@ -12,6 +12,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.StringTokenizer;
 
 /**
@@ -255,6 +257,34 @@ public class FTPClient {
 		String info = null;
 		while((info = dataReader.readLine()) != null){
 			totalInfo += info + "\r\n";
+		}
+		if(DEBUG)
+			System.out.println(totalInfo);
+		response = readLine();
+		return (response.startsWith("226 "));
+	}
+
+	public boolean list(String filename, ArrayList<String> fileList) throws IOException {
+		setPasv();
+//		setEPasv();
+		if(filename.equals("./"))
+			sendLine("LIST ");
+		else
+			sendLine("LIST " + filename);
+		
+		String response = readLine();
+		if (!response.startsWith("150 ")) {
+			throw new IOException(
+					"FTPClient was not allowed to get the directory list: " + response);
+		}
+		//BufferedInputStream input = new BufferedInputStream(dataSocket.getInputStream());
+		BufferedReader dataReader = new BufferedReader(new InputStreamReader(dataSocket
+				.getInputStream()));
+		String totalInfo = new String();
+		String info = null;
+		while((info = dataReader.readLine()) != null){
+			totalInfo += info + "\r\n";
+			fileList.add(info);
 		}
 		if(DEBUG)
 			System.out.println(totalInfo);
