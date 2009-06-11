@@ -21,7 +21,8 @@ public class FTPClientTest {
 		client = new FTPClient();
 		
 		// For connection test
-		client.connect(host, "zhang", "Myzhang123");
+		//client.connect(host, "zhang", "Myzhang123");
+		client.connect(host);
 		String pwd = client.pwd();
 		System.out.println(pwd);
 		
