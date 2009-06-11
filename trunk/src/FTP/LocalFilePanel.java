@@ -1,23 +1,31 @@
 package FTP;
 
 import java.awt.BorderLayout;
+import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.File;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
 
 public class LocalFilePanel extends JPanel implements ActionListener,
@@ -35,9 +43,15 @@ public class LocalFilePanel extends JPanel implements ActionListener,
     private String currentPath;
     private int currentIndex;
     private boolean init = false;
+    
+	private FTPClient ftp;
+	private JPopupMenu popupMenu;
+	private int selectRowIndex = -1;
 
-    public LocalFilePanel() {
+    public LocalFilePanel(FTPClient ftp2) {
         super(new BorderLayout());
+        
+        ftp = ftp2;
         
         JPanel jp = new JPanel(new BorderLayout());
         jcbPath = new JComboBox();
@@ -46,11 +60,12 @@ public class LocalFilePanel extends JPanel implements ActionListener,
         dtmFile = new LocalTableModel();
         dtmFile.addColumn("名称");
         dtmFile.addColumn("大小");
-        dtmFile.addColumn("类型");
+//        dtmFile.addColumn("类型");
         dtmFile.addColumn("修改日期");
         jtFile = new JTable(dtmFile);
         jtFile.setShowGrid(false);
         jtFile.addMouseListener(this);
+        createPopMenuForTable();
         jlLocal = new JLabel("本地状态", JLabel.CENTER);
 
         add(jp, "North");
@@ -64,6 +79,30 @@ public class LocalFilePanel extends JPanel implements ActionListener,
         init = true;
     }
 
+	private void createPopMenuForTable() {
+		// TODO Auto-generated method stub
+		popupMenu = new JPopupMenu();
+
+		JMenuItem uploadItem = new JMenuItem("上传");
+		uploadItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				String filename = jtFile.getValueAt(selectRowIndex, 0).toString();
+				File file = new File(currentPath, jtFile.getValueAt(selectRowIndex, 0).toString());
+				if(!file.isDirectory()){
+					try {
+						File aFile = new File(currentPath, filename);
+						ftp.stor(aFile);
+					} catch (IOException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+				}
+			}
+		});
+		
+		popupMenu.add(uploadItem);
+	}
+    
     //处理路径的选择事件
 	@Override
 	public void actionPerformed(ActionEvent e) {
@@ -149,17 +188,43 @@ public class LocalFilePanel extends JPanel implements ActionListener,
 		// TODO Auto-generated method stub
 
 	}
+	
+	private void maybeShowPopup(MouseEvent e) {
+		if (e.isPopupTrigger() && jtFile.isEnabled()) {
+			Point p = new Point(e.getX(), e.getY());
+//			int col = jtFile.columnAtPoint(p);
+			int row = jtFile.rowAtPoint(p);
+			
+			selectRowIndex = row;
 
+			// translate table index to model index
+//			int mcol = jtFile.getColumn(jtFile.getColumnName(col))
+//					.getModelIndex();
+
+			if (row >= 0 && row < jtFile.getRowCount()) {
+//				cancelCellEditing();
+
+				// Create the Popup menu
+//				createPopMenuForTable();
+				
+				// ... and show it
+				if (popupMenu != null && popupMenu.getComponentCount() > 0) {
+					popupMenu.show(jtFile, p.x, p.y);
+				}
+			}
+		}
+	}
+	
 	@Override
 	public void mousePressed(MouseEvent e) {
 		// TODO Auto-generated method stub
-
+		maybeShowPopup(e);
 	}
 
 	@Override
 	public void mouseReleased(MouseEvent e) {
 		// TODO Auto-generated method stub
-
+		maybeShowPopup(e);
 	}
 	
     //显示系统分区及文件路径 并 在JTabel中显示当前路径的文件信息
@@ -209,7 +274,7 @@ public class LocalFilePanel extends JPanel implements ActionListener,
         //如果判断为非分区根目录，则添加 返回上级 一行
         if (strPath.split("\\\\").length > 1)
         {
-            dtmFile.addRow(new String[]{"返回上级", "", "", ""});
+            dtmFile.addRow(new String[]{"返回上级", "", ""});
         }
 
         //列出当前目录所有目录及文件
@@ -219,24 +284,26 @@ public class LocalFilePanel extends JPanel implements ActionListener,
             String name = files[i].getName();
             if (files[i].isDirectory())
             {
-                dtmFile.addRow(new String[]{name, "", "文件夹", ""});
+//                dtmFile.addRow(new String[]{name, "", "文件夹", ""});
+            	dtmFile.addRow(new String[]{name, "", ""});
             }
             else
             {
-                if (name.lastIndexOf(".") != -1)
-                {
-                    dtmFile.addRow(new String[]{name.substring(0, name.lastIndexOf(".")), 
-                            sizeFormat(files[i].length()), 
-                            name.substring(name.lastIndexOf(".") + 1),
-                            new SimpleDateFormat("yyyy-MM-dd hh:mm").format(new Date(files[i].lastModified()))});
-                }
-                else
-                {
+//                if (name.lastIndexOf(".") != -1)
+//                {
+//                    dtmFile.addRow(new String[]{name.substring(0, name.lastIndexOf(".")),
+//                    dtmFile.addRow(new String[]{name,		
+//                            sizeFormat(files[i].length()), 
+////                            name.substring(name.lastIndexOf(".") + 1),
+//                            new SimpleDateFormat("yyyy-MM-dd hh:mm").format(new Date(files[i].lastModified()))});
+//                }
+//                else
+//                {
                     dtmFile.addRow(new String[]{name, 
                             sizeFormat(files[i].length()), 
-                            "",
+//                            "",
                             new SimpleDateFormat("yyyy-MM-dd hh:mm").format(new Date(files[i].lastModified()))});
-                }
+//                }
             }
         }
         
@@ -263,14 +330,17 @@ public class LocalFilePanel extends JPanel implements ActionListener,
     }
 
     //测试
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         JFrame jf = new JFrame("测试");
         jf.setSize(300, 400);
         jf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         Dimension di = Toolkit.getDefaultToolkit().getScreenSize();
         jf.setLocation((int)(di.getWidth() - jf.getWidth()) / 2, 
                 (int)(di.getHeight() - jf.getHeight()) / 2);
-        jf.add(new LocalFilePanel());
+		FTPClient aFtp = new FTPClient();
+		aFtp.connect("166.111.80.101", "zhang", "Myzhang123");
+
+        jf.add(new LocalFilePanel(aFtp));
         jf.setVisible(true);
     }
 
