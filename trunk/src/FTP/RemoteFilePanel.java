@@ -42,7 +42,7 @@ public class RemoteFilePanel extends JPanel implements ActionListener,
 	private JTable jtFile;
 	private DefaultTableModel dtmFile;
 	private String currentPath = new String();
-	private int currentIndex;
+//	private int currentIndex;
 	private boolean init = false;
 	private FTPClient ftp;
 
@@ -50,6 +50,8 @@ public class RemoteFilePanel extends JPanel implements ActionListener,
 	private JTextArea outArea;
 
 	private int selectRowIndex = -1;
+	
+	private LocalFilePanel local;
 	
 	public RemoteFilePanel(FTPClient ftp) {
 		super(new BorderLayout());
@@ -101,6 +103,7 @@ public class RemoteFilePanel extends JPanel implements ActionListener,
 					try {
 						ftp.download(filename);
 						listFiles(currentPath);
+						local.ListFiles();
 					} catch (IOException e1) {
 						// TODO Auto-generated catch block
 						e1.printStackTrace();
@@ -138,12 +141,16 @@ public class RemoteFilePanel extends JPanel implements ActionListener,
 //				super();
 				super(parent, title, true);
 				
-				Container cp = getContentPane();
-				cp.setPreferredSize(new Dimension(150, 100));
-				cp.setLayout(new BorderLayout());
-				cp.add(new JLabel(label), "North");
+//				Container cp = getContentPane();
+//				setPreferredSize(new Dimension(150, 100));
+				setSize(200, 80);
+				Dimension di = Toolkit.getDefaultToolkit().getScreenSize();
+				setLocation((int) (di.getWidth() - getWidth()) / 2, (int) (di
+						.getHeight() - getHeight()) / 2);
+				setLayout(new BorderLayout());
+				add(new JLabel(label), "North");
 				final JTextField text = new JTextField();
-				cp.add(text, "Center");
+				add(text, "Center");
 				JButton ok = new JButton("OK");
 				ok.addActionListener(new ActionListener(){
 					public void actionPerformed(ActionEvent e){
@@ -151,7 +158,7 @@ public class RemoteFilePanel extends JPanel implements ActionListener,
 						dispose();
 					}
 				});
-				cp.add(ok, "East");
+				add(ok, "East");
 //				setsize(150,50);
 			}
 			public String getNewName(){
@@ -167,8 +174,11 @@ public class RemoteFilePanel extends JPanel implements ActionListener,
 				NewNameDialog dialog = new NewNameDialog(null,"重命名文件","新文件名称：");
 					dialog.setVisible(true);
 				try {
-					ftp.rename(filename, dialog.getNewName());
-					listFiles(currentPath);
+					String newName = dialog.getNewName();
+					if((newName != null) && !newName.isEmpty()){
+						ftp.rename(filename, newName);
+						listFiles(currentPath);
+					}
 				} catch (IOException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
@@ -185,8 +195,11 @@ public class RemoteFilePanel extends JPanel implements ActionListener,
 				NewNameDialog dialog1 = new NewNameDialog(null,"创建目录", "目录名称");
 				dialog1.setVisible(true);
 				try {
-					ftp.mkDirectory(dialog1.getNewName());
-					listFiles(currentPath);
+					String newName = dialog1.getNewName();
+					if((newName != null) && !newName.isEmpty()){
+						ftp.mkDirectory(dialog1.getNewName());
+						listFiles(currentPath);
+					}
 				} catch (IOException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
@@ -209,19 +222,12 @@ public class RemoteFilePanel extends JPanel implements ActionListener,
 		if (init == false) {
 			return;
 		}
-		int index = jcbPath.getSelectedIndex();
 		String item = (String) jcbPath.getSelectedItem();
-		{
-			try {
-				if (listFiles(item) == false) {
-					jcbPath.setSelectedIndex(currentIndex);
-				} else {
-					currentIndex = index;
-				}
-			} catch (IOException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
+		try {
+			listFiles(item);
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
 		}
 	}
 
@@ -315,6 +321,10 @@ public class RemoteFilePanel extends JPanel implements ActionListener,
 		// TODO Auto-generated method stub
 		maybeShowPopup(e);
 	}
+	
+	public boolean listFiles() throws IOException{
+		return listFiles(currentPath);
+	}
 
 	// The first time to list the files after the FTP is connected
 	public boolean initListFiles(String filename) throws IOException {
@@ -329,17 +339,16 @@ public class RemoteFilePanel extends JPanel implements ActionListener,
 		if (ftp.list(path, fileList)) {
 			if (!path.equals("./")) {
 				ftp.cwd(path);
-				if (!path.equals("/"))
-					currentPath += path + "/";
+				if(path.startsWith("/"))
+					currentPath = path; // Now in root directory or the absolute directory
 				else
-					currentPath = path; // Now in root directory
+					currentPath += path + "/";
 			}
-			init = false;
 			if (!pathSet.contains(currentPath)) {
 				jcbPath.addItem(currentPath);
 				pathSet.add(currentPath);
 			}
-			jcbPath.setSelectedItem(path);
+			jcbPath.setSelectedItem(currentPath);
 
 			// 清空现有数据
 			dtmFile.setRowCount(0);
@@ -363,13 +372,19 @@ public class RemoteFilePanel extends JPanel implements ActionListener,
 				String time = tokenizer.nextToken() + " "
 						+ tokenizer.nextToken() + " " + tokenizer.nextToken();
 				String name = tokenizer.nextToken();
+				// We must to handle the file name contained space
+				while(tokenizer.hasMoreTokens())
+					name += " " + tokenizer.nextToken();
 
 				dtmFile.addRow(new String[] { name, size, time, attr });
 			}
 			return true;
 		}
 		return false;
-
+	}
+	
+	public void setLocalFileList(LocalFilePanel aLocal){
+		local = aLocal;
 	}
 
 	// 将文件大小转换成相应字符串格式
@@ -378,9 +393,9 @@ public class RemoteFilePanel extends JPanel implements ActionListener,
 		if (length < 1024) {
 			return String.valueOf(length);
 		} else if ((kb = length / 1024) < 1024) {
-			return (String.valueOf(kb) + "kb");
+			return (String.valueOf(kb) + "KB");
 		} else {
-			return (String.valueOf(length / 1024 / 1024) + "kb");
+			return (String.valueOf(length / 1024 / 1024) + "MB");
 		}
 	}
 
