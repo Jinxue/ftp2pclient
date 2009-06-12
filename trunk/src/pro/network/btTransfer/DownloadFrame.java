@@ -26,6 +26,7 @@ import java.util.ArrayList;
 
 public class DownloadFrame extends JFrame {
 
+	
 	private ArrayList<FileInfo> btItems;
 	
 	/* 界面上的组件 */
@@ -52,7 +53,7 @@ public class DownloadFrame extends JFrame {
 		btItems = new ArrayList<FileInfo>();
 		
 		this.setSize(796, 1000);
-		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		
 		panel = new JPanel();
 		panelState = new JPanel();
