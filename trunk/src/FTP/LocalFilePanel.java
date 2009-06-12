@@ -154,7 +154,13 @@ public class LocalFilePanel extends JPanel implements ActionListener,
 		// TODO Auto-generated method stub
         if(e.getClickCount()==2) {
             int row = ((JTable)e.getSource()).getSelectedRow();
-            if (((JTable)e.getSource()).getValueAt(row, 2).toString().equals("文件夹"))
+            String fileName = ((JTable)e.getSource()).getValueAt(row, 0).toString();
+            if ((fileName.equals("返回上级"))
+                    && ((JTable)e.getSource()).getValueAt(row, 2).toString().equals(""))
+            {
+                listFiles(new File(currentPath).getParentFile());
+            }
+            else if ((new File(currentPath, fileName)).isDirectory())
             {
                 File file;
                 //判断是否为根目录，作不同处理。一个 \ 的差别
@@ -167,11 +173,6 @@ public class LocalFilePanel extends JPanel implements ActionListener,
                     file = new File(currentPath + ((JTable)e.getSource()).getValueAt(row, 0).toString());
                 }
                 listFiles(file);
-            }
-            else if (((JTable)e.getSource()).getValueAt(row, 0).toString().equals("返回上级")
-                    && ((JTable)e.getSource()).getValueAt(row, 2).toString().equals(""))
-            {
-                listFiles(new File(currentPath).getParentFile());
             }
         }
     }

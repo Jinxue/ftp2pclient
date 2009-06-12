@@ -321,8 +321,9 @@ public class FTPClient {
 		sendLine("STOR " + filename);
 		String response = readLine();
 		if (!response.startsWith("150 ")) {
-			throw new IOException(
-					"FTPClient was not allowed to send the file: " + response);
+//			throw new IOException(
+//					"FTPClient was not allowed to send the file: " + response);
+			return false;
 		}
 		BufferedOutputStream output = new BufferedOutputStream(dataSocket
 				.getOutputStream());
@@ -352,8 +353,9 @@ public class FTPClient {
 			return false;
 		}
 		if (!response.startsWith("150 ")) {
-			throw new IOException(
-					"FTPClient was not allowed to download the file: " + response);
+//			throw new IOException(
+//					"FTPClient was not allowed to download the file: " + response);
+			return false;
 		}
 		BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(new File(localWD, filename)));
 
