@@ -25,7 +25,7 @@ public class Ftp2pClient extends JFrame {
 //        super(new GridLayout(1, 1));
         
         mainPane = new JTabbedPane();
-        ImageIcon icon = createImageIcon("../icon.png");
+        ImageIcon icon = createImageIcon("..\\icon.png");
         
         FTPFrame panel1 = new FTPFrame();
         mainPane.addTab("FTP Client", icon, panel1.getContentPane(),
