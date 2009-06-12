@@ -118,8 +118,21 @@ public class InitFrame extends JFrame {
                 .add(panel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addContainerGap())
         );
+        
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosing(java.awt.event.WindowEvent evt) {
+                exitForm(evt);
+            }
+        });
+ 
         pack();
 	}
+	
+    /** Exit the Application */
+    private void exitForm(java.awt.event.WindowEvent evt) {                          
+//        System.exit(0);
+    	dispose();
+    }                         
 	
 	/* 显示本机的主机名和IP地址 */
 	private void setHostAndIP() {
