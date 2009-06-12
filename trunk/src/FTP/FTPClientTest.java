@@ -5,7 +5,7 @@ import java.io.IOException;
 
 public class FTPClientTest {
 
-	static String host = "166.111.80.101";
+	static String host = "166.111.80.5";
 	
 	//For IPv6 testing
 //	static String host = "fe80::21a:64ff:fea1:23c2";

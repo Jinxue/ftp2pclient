@@ -245,6 +245,7 @@ public class LocalFilePanel extends JPanel implements ActionListener,
         }
         
         currentPath = path.getAbsolutePath();
+        ftp.setLocalWD(currentPath);
         init = false;
         jcbPath.removeAllItems();
         File[] roots = File.listRoots();
