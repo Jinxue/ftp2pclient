@@ -101,10 +101,16 @@ public class FTPClient {
 		}
 		sendLine("PASS " + pass);
 		response = readLine();
-		if (!response.startsWith("230 ")) {
+		
+		// If there is welcome information
+		while (response.startsWith("230-")) {
+			response = readLine();
+		}
+		
+		if(!response.startsWith("230 ")){
 //			throw new IOException(
-//					"FTPClient was unable to log in with the supplied password: "
-//							+ response);
+//			"FTPClient was unable to log in with the supplied password: "
+//					+ response);
 			return false;
 		}
 		// Now logged in.
