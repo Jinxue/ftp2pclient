@@ -168,8 +168,21 @@ public class DownloadFrame extends JFrame {
                 .add(panelLog, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addContainerGap())
         );
+
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosing(java.awt.event.WindowEvent evt) {
+                exitForm(evt);
+            }
+        });
+ 
         pack();
 	}
+
+    /** Exit the Application */
+    private void exitForm(java.awt.event.WindowEvent evt) {                          
+//        System.exit(0);
+    	dispose();
+    }                         
 	
 	/**
 	 * "打开文件"按钮上的操作：解析Bt文件
