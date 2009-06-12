@@ -350,7 +350,7 @@ public class LocalFilePanel extends JPanel implements ActionListener,
         jf.setLocation((int)(di.getWidth() - jf.getWidth()) / 2, 
                 (int)(di.getHeight() - jf.getHeight()) / 2);
 		FTPClient aFtp = new FTPClient();
-		aFtp.connect("166.111.80.101", "zhang", "Myzhang123");
+		aFtp.connect("166.111.80.101", "ftptest", "ftptest");
 
         jf.add(new LocalFilePanel(aFtp));
         jf.setVisible(true);
