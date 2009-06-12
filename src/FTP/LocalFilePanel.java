@@ -47,6 +47,8 @@ public class LocalFilePanel extends JPanel implements ActionListener,
 	private FTPClient ftp;
 	private JPopupMenu popupMenu;
 	private int selectRowIndex = -1;
+	
+	private RemoteFilePanel remote;
 
     public LocalFilePanel(FTPClient ftp2) {
         super(new BorderLayout());
@@ -92,6 +94,7 @@ public class LocalFilePanel extends JPanel implements ActionListener,
 					try {
 						File aFile = new File(currentPath, filename);
 						ftp.stor(aFile);
+						remote.listFiles();
 					} catch (IOException e1) {
 						// TODO Auto-generated catch block
 						e1.printStackTrace();
@@ -228,6 +231,10 @@ public class LocalFilePanel extends JPanel implements ActionListener,
 		maybeShowPopup(e);
 	}
 	
+	public boolean ListFiles(){
+		return listFiles(new File(currentPath));
+	}
+	
     //显示系统分区及文件路径 并 在JTabel中显示当前路径的文件信息
     private boolean listFiles(File path) {
         String strPath = path.getAbsolutePath();
@@ -312,6 +319,10 @@ public class LocalFilePanel extends JPanel implements ActionListener,
 
         return true;
     }
+    
+	public void setRemoteFileList(RemoteFilePanel aRemote){
+		remote = aRemote;
+	}
 
     //将文件大小转换成相应字符串格式
     private String sizeFormat(long length) {
@@ -322,11 +333,11 @@ public class LocalFilePanel extends JPanel implements ActionListener,
         }
         else if ((kb = length / 1024) < 1024)
         {
-            return (String.valueOf(kb) + "kb");
+            return (String.valueOf(kb) + "KB");
         }
         else
         {
-            return (String.valueOf(length / 1024 / 1024) + "kb");
+            return (String.valueOf(length / 1024 / 1024) + "MB");
         }
     }
 

@@ -52,31 +52,32 @@ public class FTPClient {
 	 * Connects to the default port of an FTP server and logs in as
 	 * anonymous/anonymous.
 	 */
-	public void connect(String host) throws IOException {
-		connect(host, 21);
+	public boolean connect(String host) throws IOException {
+		return (connect(host, 21));
 	}
 
 	/**
 	 * Connects to an FTP server and logs in as anonymous/anonymous.
 	 */
-	public void connect(String host, int port) throws IOException {
-		connect(host, port, "anonymous", "anonymous");
+	public boolean connect(String host, int port) throws IOException {
+		return (connect(host, port, "anonymous", "anonymous"));
 	}
 
-	public void connect(String host, String user,
+	public boolean connect(String host, String user,
 			String pass) throws IOException {
-		connect(host, 21, user, pass);
+		return(connect(host, 21, user, pass));
 	}
 	/**
 	 * Connects to an FTP server and logs in with the supplied username and*
 	 * password.
 	 */
-	public void connect(String host, int port, String user,
+	public boolean connect(String host, int port, String user,
 			String pass) throws IOException {
 		serverIP = host;
 		if (socket != null) {
-			throw new IOException(
-					"FTPClient is already connected. Disconnect first.");
+			return false;
+//			throw new IOException(
+//					"FTPClient is already connected. Disconnect first.");
 		}
 		socket = new Socket(host, port);
 		reader = new BufferedReader(new InputStreamReader(socket
@@ -85,25 +86,29 @@ public class FTPClient {
 				.getOutputStream()));
 		String response = readLine();
 		if (!response.startsWith("220 ")) {
-			throw new IOException(
-					"FTPClient received an unknown response when connecting to the FTP server: "
-							+ response);
+//			throw new IOException(
+//					"FTPClient received an unknown response when connecting to the FTP server: "
+//							+ response);
+			return false;
 		}
 		sendLine("USER " + user);
 		response = readLine();
 		if (!response.startsWith("331 ")) {
-			throw new IOException(
-					"FTPClient received an unknown response after sending the user: "
-							+ response);
+//			throw new IOException(
+//					"FTPClient received an unknown response after sending the user: "
+//							+ response);
+			return false;
 		}
 		sendLine("PASS " + pass);
 		response = readLine();
 		if (!response.startsWith("230 ")) {
-			throw new IOException(
-					"FTPClient was unable to log in with the supplied password: "
-							+ response);
+//			throw new IOException(
+//					"FTPClient was unable to log in with the supplied password: "
+//							+ response);
+			return false;
 		}
 		// Now logged in.
+		return true;
 	}
 
 	/**
