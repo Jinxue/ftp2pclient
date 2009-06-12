@@ -103,7 +103,7 @@ public class FTPClient {
 		response = readLine();
 		
 		// If there is welcome information
-		while (response.startsWith("230-")) {
+		while (response.startsWith("230-") || response.startsWith(" ")) {
 			response = readLine();
 		}
 		
