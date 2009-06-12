@@ -16,7 +16,7 @@ public class InitFrame extends JFrame {
 	public InitFrame() {
 
 		this.setSize(549, 312);
-		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		
 		/* ≥ı ºªØpanel */
 		panel = new JPanel();
