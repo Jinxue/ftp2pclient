@@ -27,8 +27,7 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
 
-public class RemoteFilePanel extends JPanel implements ActionListener,
-		MouseListener {
+public class RemoteFilePanel extends JPanel implements MouseListener {
 
 	/**
 	 * 
@@ -60,7 +59,23 @@ public class RemoteFilePanel extends JPanel implements ActionListener,
 		JPanel jp = new JPanel(new BorderLayout());
 		// Add the combined box for path selection
 		jcbPath = new JComboBox();
-		jcbPath.addActionListener(this);
+//		jcbPath.addActionListener(this);
+		jcbPath.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+//				if (e.getSource())
+				if (init == false) {
+					return;
+				}
+				String item = (String) jcbPath.getSelectedItem();
+				try {
+					listFiles(item);
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+			});
 		jp.add(jcbPath, "North");
 		pathSet = new HashSet<String>();
 
@@ -215,20 +230,20 @@ public class RemoteFilePanel extends JPanel implements ActionListener,
 	}
 
 	// 处理路径的选择事件
-	@Override
-	public void actionPerformed(ActionEvent e) {
-		// TODO Auto-generated method stub
-		if (init == false) {
-			return;
-		}
-		String item = (String) jcbPath.getSelectedItem();
-		try {
-			listFiles(item);
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-	}
+//	@Override
+//	public void actionPerformed(ActionEvent e) {
+//		// TODO Auto-generated method stub
+//		if (init == false) {
+//			return;
+//		}
+//		String item = (String) jcbPath.getSelectedItem();
+//		try {
+//			listFiles(item);
+//		} catch (IOException e1) {
+//			// TODO Auto-generated catch block
+//			e1.printStackTrace();
+//		}
+//	}
 
 	// JTable里文件夹双击事件
 	@Override
@@ -335,6 +350,7 @@ public class RemoteFilePanel extends JPanel implements ActionListener,
 	private boolean listFiles(String path) throws IOException {
 		// TODO Auto-generated method stub
 		ArrayList<String> fileList = new ArrayList<String>();
+//		ftp.list(path);
 		if (ftp.list(path, fileList)) {
 			if (!path.equals("./")) {
 				ftp.cwd(path);

@@ -33,6 +33,7 @@ public class FTPClient {
 	private BufferedWriter writer = null;
 	private static boolean DEBUG = true;
 	private String serverIP = null;
+	private boolean isIPv6 = false;
 
 	private String localWD;
 	
@@ -79,11 +80,18 @@ public class FTPClient {
 //					"FTPClient is already connected. Disconnect first.");
 		}
 		socket = new Socket(host, port);
+		if (socket.getInetAddress().getHostAddress().contains(":")){
+			isIPv6 = true;
+		}
 		reader = new BufferedReader(new InputStreamReader(socket
 				.getInputStream()));
 		writer = new BufferedWriter(new OutputStreamWriter(socket
 				.getOutputStream()));
 		String response = readLine();
+		while (response.startsWith("220-")) {
+			response = readLine();
+		}
+
 		if (!response.startsWith("220 ")) {
 //			throw new IOException(
 //					"FTPClient received an unknown response when connecting to the FTP server: "
@@ -159,6 +167,9 @@ public class FTPClient {
 //			System.out.println("The data socket is established!");
 //			return true;
 //		}else{
+		if(isIPv6){
+			return setEPasv();
+		}
 			sendLine("PASV");
 			String response = readLine();
 			if (!response.startsWith("227 ")) {
@@ -200,6 +211,17 @@ public class FTPClient {
 		if(response.startsWith("522 ")){
 			System.out.println("Sorry, the IPv6 protocol is not supported");
 			return false;
+		}
+		if(response.startsWith("250 ")){
+			response = readLine();
+		}
+		if(response.startsWith("226 ")){
+			//226 4 matches total
+			response = readLine();
+		}
+		if(response.startsWith("200 ")){
+			//200 TYPE is now 8-bit binary
+			response = readLine();
 		}
 		if (!response.startsWith("229 ")) {
 			throw new IOException(
@@ -252,10 +274,13 @@ public class FTPClient {
 	public boolean list(String filename) throws IOException {
 		setPasv();
 //		setEPasv();
-		if(filename.equals("./"))
+		if(!filename.equals("./")){
+			cwd(filename);
+		}
+//		if(filename.equals("./"))
 			sendLine("LIST ");
-		else
-			sendLine("LIST " + filename);
+//		else
+//			sendLine("LIST " + filename);
 		
 		String response = readLine();
 		if (!response.startsWith("150 ")) {
@@ -270,19 +295,28 @@ public class FTPClient {
 		while((info = dataReader.readLine()) != null){
 			totalInfo += info + "\r\n";
 		}
-//		if(DEBUG)
-//			System.out.println(totalInfo);
+		if(DEBUG)
+			System.out.println(totalInfo);
 		response = readLine();
-		return (response.startsWith("226 "));
+		if(response.startsWith("226")){
+			if(!filename.equals("./")){
+				cdup();
+			}
+			return true;
+		}
+		return false;
 	}
 
 	public boolean list(String filename, ArrayList<String> fileList) throws IOException {
 		setPasv();
 //		setEPasv();
-		if(filename.equals("./"))
+		if(!filename.equals("./")){
+			cwd(filename);
+		}
+//		if(filename.equals("./"))
 			sendLine("LIST ");
-		else
-			sendLine("LIST " + filename);
+//		else
+//			sendLine("LIST " + filename);
 		
 		String response = readLine();
 		if (!response.startsWith("150 ")) {
@@ -301,8 +335,14 @@ public class FTPClient {
 //		if(DEBUG)
 //			System.out.println(totalInfo);
 		response = readLine();
-		return (response.startsWith("226 "));
-	}
+		// For tv6.sjtu.edu.cn
+		if(response.startsWith("226")){
+			if(!filename.equals("./")){
+				cdup();
+			}
+			return true;
+		}
+		return false;	}
 	
 	/**
 	 * Sends a file to be stored on the FTP server. Returns true if the file
@@ -355,6 +395,12 @@ public class FTPClient {
 	 */
 	public boolean download(String filename) throws IOException{
 		// Set the passive mode for data transmission
+		if(!filename.endsWith(".txt") && 
+				!filename.endsWith(".c") &&
+				!filename.endsWith(".sh") &&
+				!filename.endsWith(".java") )
+			bin();
+		
 		setPasv();
 		
 		sendLine("RETR " + filename);
@@ -362,7 +408,9 @@ public class FTPClient {
 		if(response.startsWith("550 ")){
 			return false;
 		}
-		if (!response.startsWith("150 ")) {
+		//for tv6.sjtu.edu.cn  
+		// 150-Accepted data connection
+		if (!response.startsWith("150")) {
 //			throw new IOException(
 //					"FTPClient was not allowed to download the file: " + response);
 			return false;
@@ -381,7 +429,14 @@ public class FTPClient {
 		input.close();
 
 		response = readLine();
-		return (response.startsWith("226 "));
+		// For tv6.sjtu.edu.cn  
+		// 150 72.0 kbytes to download
+		if(response.startsWith("150 ")){
+			response = readLine();
+		}
+		//for tv6.sjtu.edu.cn  
+		// 226-File successfully transferred
+		return (response.startsWith("226"));
 	}
 	
 	/**
@@ -441,6 +496,9 @@ public class FTPClient {
 	public boolean bin() throws IOException {
 		sendLine("TYPE I");
 		String response = readLine();
+		if(response.startsWith("226")){
+			response = readLine();
+		}
 		return (response.startsWith("200 "));
 	}
 
@@ -452,6 +510,9 @@ public class FTPClient {
 	public boolean ascii() throws IOException {
 		sendLine("TYPE A");
 		String response = readLine();
+		if(response.startsWith("226")){
+			response = readLine();
+		}
 		return (response.startsWith("200 "));
 	}
 
