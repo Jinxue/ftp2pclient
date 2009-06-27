@@ -1,5 +1,7 @@
 package pro.network.btTransfer;
-
+/*
+ * 客户端下载文件
+ */
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JButton;
@@ -26,7 +28,6 @@ import java.util.ArrayList;
 
 public class DownloadFrame extends JFrame {
 
-	
 	private ArrayList<FileInfo> btItems;
 	
 	/* 界面上的组件 */
@@ -53,7 +54,7 @@ public class DownloadFrame extends JFrame {
 		btItems = new ArrayList<FileInfo>();
 		
 		this.setSize(796, 1000);
-		this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
 		panel = new JPanel();
 		panelState = new JPanel();
@@ -79,7 +80,6 @@ public class DownloadFrame extends JFrame {
 		downloadFile.addActionListener(new FileDownLoadListener());
 		
 		buttonCombine.addActionListener(new CombineListener());
-		
 		layOut();
 	}
 	
@@ -169,21 +169,8 @@ public class DownloadFrame extends JFrame {
                 .add(panelLog, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addContainerGap())
         );
-
-        addWindowListener(new java.awt.event.WindowAdapter() {
-            public void windowClosing(java.awt.event.WindowEvent evt) {
-                exitForm(evt);
-            }
-        });
- 
         pack();
 	}
-
-    /** Exit the Application */
-    private void exitForm(java.awt.event.WindowEvent evt) {                          
-//        System.exit(0);
-    	dispose();
-    }                         
 	
 	/**
 	 * "打开文件"按钮上的操作：解析Bt文件
@@ -250,6 +237,11 @@ public class DownloadFrame extends JFrame {
 		}
 	}	
 	
+	/*
+	 * 下载文件的类
+	 * @author Yajie Miao
+	 *
+	 */
 	private class DownloadFile extends Thread {
 
 		private FileInfo fileInfo;
@@ -289,9 +281,7 @@ public class DownloadFrame extends JFrame {
 				
 				/* 向服务器端发送文件路径和文件名 */
 				dataOut.writeUTF(fileInfo.getPath());
-//				dataOut.flush();
 				dataOut.writeUTF(fileInfo.getFilename());
-//				dataOut.flush();
 										
 				/* 接收文件大小*/
 				long fileLen = 0;
@@ -315,9 +305,7 @@ public class DownloadFrame extends JFrame {
 				
 			    /* 向服务器发送文件数据的偏移量和长度 */
 				dataOut.writeLong(off);
-//				dataOut.flush();
 				dataOut.writeLong(segLen);
-//				dataOut.flush();
 				
 				int bufferSize = 1024;
 				byte[] buffer =  new byte[bufferSize];
@@ -333,17 +321,13 @@ public class DownloadFrame extends JFrame {
 						read = dataIn.read(buffer);
 					}
 					
-//					if(read == -1) {
-//						break;
-//					}
 					passedLen += read;
 					
-					Double rcvPercentage = ((double) passedLen / segLen) * 100;
-					
+					/* 计算下载百分比，并显示在表格中 */
+					Double rcvPercentage = ((double) passedLen / segLen) * 100;					
 					dfModel.setValueAt(rcvPercentage + "%", fileInfo.getId()-1, 3);
-
-//					System.out.println("文件接收了" + rcvPercentage + "%");
 					
+					/* 输出数据到文件中 */
 					fileOut.write(buffer, 0, read);
 					if(passedLen == segLen) {
 						break;
@@ -360,7 +344,6 @@ public class DownloadFrame extends JFrame {
 				fileOut.close();
 				
 			} catch(IOException e) {
-				//e.printStackTrace();
 				dfModel.setValueAt("下载失败", fileInfo.getId()-1, 1);
 				textLog.append("从服务器" + fileInfo.getServerURL() + "下载失败\n");
 				System.out.println("文件片段" + fileInfo.getId() + "下载出错");
@@ -380,19 +363,11 @@ public class DownloadFrame extends JFrame {
 			
 			try {
 				s = new Socket(fileInfo.getServerURL(), fileInfo.getPort());
-//				System.out.println("连接服务器" + fileInfo.getId() + "成功");
 				return true;
 			} catch (Exception e) {
-//				System.out.println("连接服务器" + fileInfo.getId() + "失败");
 				return false;
 			}
 		}		
-	}
-
-	
-	public static void main(String args[]) {
-		DownloadFrame downloadFrame = new DownloadFrame();
-		downloadFrame.setVisible(true);
 	}
 	
 }

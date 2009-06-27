@@ -1,5 +1,8 @@
 package pro.network.btTransfer;
-
+/*
+ * 结构化存储BT文件信息的类
+ * 作者：苗亚杰
+ */
 public class FileInfo {
 	private int id;                //序列号
 

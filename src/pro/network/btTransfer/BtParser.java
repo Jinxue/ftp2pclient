@@ -16,10 +16,14 @@ import java.util.ArrayList;
 
 public class BtParser {
 
-	private String btFilePath = null;           //bt文件的路径
+	private String btFilePath = null;               //bt文件的路径
 	
 	private ArrayList<String> btFileContent;        //bt文件的内容
 	
+	/**
+	 * 构造函数
+	 * @param btFilePath
+	 */
 	public BtParser(String btFilePath) {
 		this.btFilePath = btFilePath;
 		btFileContent = new ArrayList<String>();
@@ -47,6 +51,9 @@ public class BtParser {
 		return btParseResults;
 	}
 	
+    /**
+     * 从btFilePath中读取Bt文件的内容
+     */
 	private void getBtFileContent() {
 		File file = new File(btFilePath);
 		try{
@@ -62,6 +69,11 @@ public class BtParser {
 		}
 	}
 	
+	/**
+	 * 解析出文件路径信息
+	 * @param btOneItem
+	 * @return 文件的路径
+	 */
 	private String getPath(String btOneItem) {
 		
 		/* 得到Server部分的长度 */
@@ -82,6 +94,11 @@ public class BtParser {
 		return path;
 	}
 	
+	/**
+	 * 解析出文件名信息
+	 * @param btOneItem
+	 * @return 文件名
+	 */
 	private String getFileName(String btOneItem) {
 		
 		/* 得到Server部分的长度 */
@@ -102,6 +119,11 @@ public class BtParser {
 		return filename;
 	}
 	
+	/**
+	 * 解析出文件服务器端URL信息
+	 * @param btOneItem
+	 * @return 服务器的URL（IP）
+	 */
 	private String getServerURL(String btOneItem) {
 		
 		/* 得到Server部分的长度 */
@@ -126,6 +148,11 @@ public class BtParser {
 		return serverURL;
 	}
 	
+	/**
+	 * 解析得到端口号
+	 * @param btOneItem
+	 * @return 服务器端得端口号
+	 */
 	private int getPort(String btOneItem) {
 		
 		/* 得到Server部分的长度 */
@@ -148,18 +175,6 @@ public class BtParser {
 		String[] strs = serverDes.split(":");
 		int port = Integer.parseInt(strs[1]);
 		return port;
-	}
-	public static void main(String args[]) {
-		BtParser btParser = new BtParser("D:\\download.torrent");
-
-		ArrayList<FileInfo> bts = btParser.getFileInfo();
-		for (int i = 0; i < bts.size(); i++) {
-			System.out.println(bts.get(i).getServerURL());
-			System.out.println(bts.get(i).getPort());
-			System.out.println(bts.get(i).getPath());
-			System.out.println(bts.get(i).getFilename());
-			System.out.println();
-		}
 	}
 	
 }
