@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 
@@ -34,8 +35,15 @@ public class FTPClient {
 	private static boolean DEBUG = true;
 	private String serverIP = null;
 	private boolean isIPv6 = false;
+	
+	private final static int fileSlice = 10 * 1024 * 1024;
+	public Integer SIGNAL = 0;
+	public Boolean START_DOWNLOAD = false;
+	public Boolean START_MERGE = false;
 
 	private String localWD;
+	
+	private FTPServerInfo ftpServer;
 	
 	// This is socket for data transmission
 	private Socket dataSocket = null;
@@ -43,6 +51,7 @@ public class FTPClient {
 	 * Create an instance of SimpleFTP.
 	 */
 	public FTPClient() {
+		ftpServer = new FTPServerInfo(); 
 	}
 
 	/*
@@ -53,19 +62,25 @@ public class FTPClient {
 	 * anonymous/anonymous.
 	 */
 	public boolean connect(String host) throws IOException {
-		return (connect(host, 21));
+		ftpServer.host = host;
+		return (connect());
 	}
 
 	/**
 	 * Connects to an FTP server and logs in as anonymous/anonymous.
 	 */
 	public boolean connect(String host, int port) throws IOException {
-		return (connect(host, port, "anonymous", "anonymous"));
+		ftpServer.host = host;
+		ftpServer.port = port;
+		return (connect());
 	}
 
 	public boolean connect(String host, String user,
 			String pass) throws IOException {
-		return(connect(host, 21, user, pass));
+		ftpServer.host = host;
+		ftpServer.username = user;
+		ftpServer.password = pass;
+		return(connect());
 	}
 	/**
 	 * Connects to an FTP server and logs in with the supplied username and*
@@ -73,6 +88,24 @@ public class FTPClient {
 	 */
 	public boolean connect(String host, int port, String user,
 			String pass) throws IOException {
+		ftpServer.host = host;
+		ftpServer.port = port;
+		ftpServer.username = user;
+		ftpServer.password = pass;
+		return (connect());
+	}
+	
+	public boolean connect(FTPServerInfo ftpServer2) throws UnknownHostException, IOException {
+		// TODO Auto-generated method stub
+		ftpServer = ftpServer2;
+		return connect();
+	}
+
+	private boolean connect() throws UnknownHostException, IOException{
+		String host = ftpServer.host;
+		int port = ftpServer.port;
+		String user = ftpServer.username;
+		String pass = ftpServer.password;
 		serverIP = host;
 		if (socket != null) {
 			return false;
@@ -307,6 +340,39 @@ public class FTPClient {
 		return false;
 	}
 
+	public int getFileSize(String filename) throws IOException{
+		int size = 0;
+		setPasv();
+		// We assume that the filename is in current working path
+		sendLine("LIST " + filename);
+		String response = readLine();
+		// 150 Here comes the directory listing.
+		if (!response.startsWith("150 ")) {
+			throw new IOException(
+					"FTPClient was not allowed to get the file information: " + response);
+		}		
+		BufferedReader dataReader = new BufferedReader(new InputStreamReader(dataSocket
+				.getInputStream()));
+		String info = null;
+		if((info = dataReader.readLine()) != null){
+			StringTokenizer tokenizer = new StringTokenizer(info);
+			String attr = tokenizer.nextToken();
+			// Note the "other" is necessary because of the token analyzer
+			String other = tokenizer.nextToken() + tokenizer.nextToken()
+					+ tokenizer.nextToken();
+			size = Integer.parseInt(tokenizer.nextToken());
+		}
+		if(DEBUG)
+			System.out.println(info);
+		response = readLine();
+		// For tv6.sjtu.edu.cn
+		if(!response.startsWith("226")){
+			throw new IOException(
+					"FTPClient LIST return failed: " + response);
+		}
+		return size;
+	}
+	
 	public boolean list(String filename, ArrayList<String> fileList) throws IOException {
 		setPasv();
 //		setEPasv();
@@ -342,7 +408,8 @@ public class FTPClient {
 			}
 			return true;
 		}
-		return false;	}
+		return false;	
+	}
 	
 	/**
 	 * Sends a file to be stored on the FTP server. Returns true if the file
@@ -392,8 +459,127 @@ public class FTPClient {
 	/**
 	 * Send the file to the server
 	 * @throws IOException 
+	 * @throws InterruptedException 
 	 */
 	public boolean download(String filename) throws IOException{
+		// Set the passive mode for data transmission
+		if(!filename.endsWith(".txt") && 
+				!filename.endsWith(".c") &&
+				!filename.endsWith(".sh") &&
+				!filename.endsWith(".java") )
+			bin();
+		
+//		setPasv();
+		String pwd = pwd();
+		
+//		sendLine("RETR " + filename);
+//		String response = readLine();
+//		if(response.startsWith("550 ")){
+//			return false;
+//		}
+//		// The size of the download file
+//		String fileSize = null;
+//		//for tv6.sjtu.edu.cn  
+//		// 150-Accepted data connection
+//		if (!response.startsWith("150")) {
+////			throw new IOException(
+////					"FTPClient was not allowed to download the file: " + response);
+//			return false;
+//		}else{
+//			//150 Opening BINARY mode data connection for site-1.4.7.zip (10919130 bytes)
+//			// obtain the size of file
+//			int opening = response.indexOf('(');
+//			int closing = response.indexOf(')', opening + 1);
+//			if (closing > 0) {
+//				String dataLink = response.substring(opening + 1, closing);
+//				StringTokenizer tokenizer = new StringTokenizer(dataLink);
+//				try {
+//					fileSize = tokenizer.nextToken();
+//				} catch (Exception e) {
+//					throw new IOException(
+//							"FTPClient received bad data link information: "
+//									+ response);
+//				}
+//			}
+//		}
+		
+//		BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(new File(localWD, filename)));
+//
+//		BufferedInputStream input = new BufferedInputStream(dataSocket
+//				.getInputStream());
+//		byte[] buffer = new byte[4096];
+//		int bytesRead = 0;
+//		while ((bytesRead = input.read(buffer)) != -1) {
+//			output.write(buffer, 0, bytesRead);
+//		}
+//		output.flush();
+//		output.close();
+//		input.close();
+
+//		DownloadThread dt = new DownloadThread(new File(localWD, filename), dataSocket);
+//		dt.start();
+//		response = readLine();
+//		// For tv6.sjtu.edu.cn  
+//		// 150 72.0 kbytes to download
+//		if(response.startsWith("150 ")){
+//			response = readLine();
+//		}
+//		//for tv6.sjtu.edu.cn  
+//		// 226-File successfully transferred
+//		return (response.startsWith("226"));
+		
+		int fileLength = getFileSize(filename);
+		int threadNumber = fileLength / fileSlice + 1;
+        for (int i=0; i< threadNumber; i++) {
+            int length = fileSlice;
+            if (i == threadNumber - 1) {
+                length = fileLength - i * fileSlice;
+            }
+            SplitDownloadThread dt = new SplitDownloadThread(ftpServer, length, i * fileSlice, this);
+            dt.setLocalFile(new File(localWD, filename + ".part" + i));
+            dt.setRemoteFile(pwd, filename);
+            dt.start();
+            SIGNAL ++;
+            START_DOWNLOAD = true;
+            START_MERGE = true;
+        }
+
+        MergeFile mf = new MergeFile(threadNumber, localWD, filename, this);
+        mf.start();
+        synchronized (this){
+        	while(START_MERGE){
+        		try {
+					this.wait();
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+        	}
+        }
+        
+//		while(START_MERGE){
+//			try {
+//				Thread.sleep(1000);
+//			} catch (InterruptedException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//		}
+		return true;
+	}
+	
+	public boolean restart(long start) throws IOException{
+		sendLine("REST " + start);
+		String response = readLine();
+		
+		if(!response.startsWith("350 ")){
+			// The server does not support restart
+			return false;
+		}
+		return true;
+	}
+	
+	public boolean singleDownload(String filename, File localFile, int length) throws IOException, InterruptedException{
 		// Set the passive mode for data transmission
 		if(!filename.endsWith(".txt") && 
 				!filename.endsWith(".c") &&
@@ -408,6 +594,8 @@ public class FTPClient {
 		if(response.startsWith("550 ")){
 			return false;
 		}
+		// The size of the download file
+		String fileSize = null;
 		//for tv6.sjtu.edu.cn  
 		// 150-Accepted data connection
 		if (!response.startsWith("150")) {
@@ -415,20 +603,29 @@ public class FTPClient {
 //					"FTPClient was not allowed to download the file: " + response);
 			return false;
 		}
-		BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(new File(localWD, filename)));
+		
+		BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(localFile));
 
 		BufferedInputStream input = new BufferedInputStream(dataSocket
 				.getInputStream());
 		byte[] buffer = new byte[4096];
-		int bytesRead = 0;
+		long bytesRead = 0;
+		long downloaded = 0;
 		while ((bytesRead = input.read(buffer)) != -1) {
-			output.write(buffer, 0, bytesRead);
+			downloaded = downloaded + bytesRead;
+			if (downloaded > length) {
+                bytesRead = bytesRead - (downloaded - length);
+            }
+			output.write(buffer, 0, (int) bytesRead);
+           if (downloaded > length) {
+        	   break;
+           }
 		}
 		output.flush();
 		output.close();
 		input.close();
-
 		response = readLine();
+
 		// For tv6.sjtu.edu.cn  
 		// 150 72.0 kbytes to download
 		if(response.startsWith("150 ")){
@@ -437,8 +634,9 @@ public class FTPClient {
 		//for tv6.sjtu.edu.cn  
 		// 226-File successfully transferred
 		return (response.startsWith("226"));
+
 	}
-	
+
 	/**
 	 * Delete a file in server
 	 * @throws IOException 
@@ -457,7 +655,7 @@ public class FTPClient {
 		String response = readLine();
 		return (response.startsWith("250 "));
 	}
-	
+
 	/**
 	 * Remove the directory in server
 	 */
@@ -546,5 +744,18 @@ public class FTPClient {
 	public void setLocalWD(String path){
 		localWD = path;
 	}
-
+	
+	public void downloadDone() {
+		synchronized(this){
+			SIGNAL--;
+			this.notify();
+		}
+	}
+	
+	public void mergeDone() {
+		synchronized (this){
+			START_MERGE = false;
+			this.notify();
+		}
+	}
 }

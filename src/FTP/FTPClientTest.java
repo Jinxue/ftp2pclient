@@ -14,8 +14,9 @@ public class FTPClientTest {
 	/**
 	 * @param args
 	 * @throws IOException 
+	 * @throws InterruptedException 
 	 */
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws IOException, InterruptedException {
 		// TODO Auto-generated method stub
 		//System.out.println(System.getProperty("user.dir"));
 		client = new FTPClient();
@@ -51,6 +52,7 @@ public class FTPClientTest {
 		
 		
 		client.list("incoming");
+		client.restart(1024);
 		System.out.println("---------------------------------------");
 		if(client.cwd("incoming")){
 			System.out.println("Change the directory successfully!");
