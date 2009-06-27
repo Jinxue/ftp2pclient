@@ -36,7 +36,9 @@ public class FTPClient {
 	private String serverIP = null;
 	private boolean isIPv6 = false;
 	
-	private final static int fileSlice = 50 * 1024 * 1024;
+	// If the file is small than leastFileSlice, there is not necessary to split
+	private final static int leastFileSlice = 10 * 1024 * 1024;
+	private final static int downloadThreadNum = 5;
 	public Integer SIGNAL = 0;
 	public Boolean START_DOWNLOAD = false;
 	public Boolean START_MERGE = false;
@@ -477,7 +479,7 @@ public class FTPClient {
 		{
 			return false;
 		}
-		if(fileLength <= fileSlice){
+		if(fileLength <= leastFileSlice){
 			setPasv();
 			sendLine("RETR " + filename);
 			String response = readLine();
@@ -521,25 +523,29 @@ public class FTPClient {
 		
 		// else for the split download
 		
-		int threadNumber = fileLength / fileSlice + 1;
+		int fileSlice = fileLength / downloadThreadNum;
 		
+		// Set the signal directly
+		SIGNAL += 5;
         START_DOWNLOAD = true;
         START_MERGE = true;
+
+        // Start the merge thread first
+        MergeFile mf = new MergeFile(downloadThreadNum, localWD, filename, this);
+        mf.start();
         
-        for (int i=0; i< threadNumber; i++) {
+        for (int i=0; i< downloadThreadNum; i++) {
+        	// Maybe the filesize can not be divided by downloadThreadNum
             int length = fileSlice;
-            if (i == threadNumber - 1) {
+            if (i == downloadThreadNum - 1) {
                 length = fileLength - i * fileSlice;
             }
             SplitDownloadThread dt = new SplitDownloadThread(ftpServer, length, i * fileSlice, this);
             dt.setLocalFile(new File(localWD, filename + ".part" + i));
             dt.setRemoteFile(pwd, filename);
             dt.start();
-//            SIGNAL ++;
         }
 
-        MergeFile mf = new MergeFile(threadNumber, localWD, filename, this);
-        mf.start();
         synchronized (this){
         	while(START_MERGE){
         		try {
@@ -734,7 +740,7 @@ public class FTPClient {
 	public void downloadDone() {
 		synchronized(this){
 			SIGNAL--;
-			this.notify();
+			this.notifyAll();
 		}
 	}
 	
