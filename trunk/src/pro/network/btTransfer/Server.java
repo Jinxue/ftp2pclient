@@ -1,5 +1,8 @@
 package pro.network.btTransfer;
-
+/*
+ * 服务器类，实现端口侦听、数据传送等功能
+ * 作者：李腾飞
+ */
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -9,21 +12,22 @@ import java.net.ServerSocket;
 import java.net.Socket;
 public class Server extends Thread {
 	
-	int port;
+	int port;                      //端口号
 	
 	public Server(int port) {
 		this.port = port;
 	}
+	
+	/**
+	 * 每个线程执行的操作
+	 */
 	public void run() {
 		Socket s = null;
 		try {
 			ServerSocket ss = new ServerSocket(port);
 			while (true) {
-//				String filePath = "E:\\kk.rmvb";
-//				File file = new File(filePath);
-//				
-//				System.out.println("文件长度为:" + file.length());
-				
+
+				/* 侦听端口 */
 				s = ss.accept();
 				System.out.println("建立socket连接");
 				

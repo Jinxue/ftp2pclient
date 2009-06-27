@@ -1,5 +1,8 @@
 package pro.network.btTransfer;
-
+/*
+ *初始化界面
+ *作者：李腾飞 
+ */
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JLabel;
@@ -16,15 +19,15 @@ public class InitFrame extends JFrame {
 	public InitFrame() {
 
 		this.setSize(549, 312);
-		this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
 		/* 初始化panel */
 		panel = new JPanel();
 		
-		/* 初始化“您的主机名”标签 */
+		/* 初始化"您的主机名"标签 */
 		hostnameLabel = new JLabel("您的主机名：");
 		
-		/* 初始化“您的ip地址”标签 */
+		/* 初始化"您的ip地址"标签 */
 		ipLabel = new JLabel("您的ip地址：");
 		
 		/* 初始化其余两个Label */
@@ -118,21 +121,8 @@ public class InitFrame extends JFrame {
                 .add(panel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addContainerGap())
         );
-        
-        addWindowListener(new java.awt.event.WindowAdapter() {
-            public void windowClosing(java.awt.event.WindowEvent evt) {
-                exitForm(evt);
-            }
-        });
- 
         pack();
 	}
-	
-    /** Exit the Application */
-    private void exitForm(java.awt.event.WindowEvent evt) {                          
-//        System.exit(0);
-    	dispose();
-    }                         
 	
 	/* 显示本机的主机名和IP地址 */
 	private void setHostAndIP() {
@@ -156,6 +146,11 @@ public class InitFrame extends JFrame {
 			}
 		}
 	}
+	
+	/**
+	 * 添加在"确定"按钮上的操作
+	 *
+	 */
 	private class OkListener implements ActionListener {
 		public void actionPerformed(ActionEvent event) {
 			
@@ -170,6 +165,7 @@ public class InitFrame extends JFrame {
 		}
 	}
 	
+	/* 界面组件 */
 	private JPanel panel;
 	private JLabel hostnameLabel;
 	private JLabel hostname;
