@@ -36,7 +36,7 @@ public class FTPClient {
 	private String serverIP = null;
 	private boolean isIPv6 = false;
 	
-	private final static int fileSlice = 10 * 1024 * 1024;
+	private final static int fileSlice = 50 * 1024 * 1024;
 	public Integer SIGNAL = 0;
 	public Boolean START_DOWNLOAD = false;
 	public Boolean START_MERGE = false;
@@ -469,67 +469,63 @@ public class FTPClient {
 				!filename.endsWith(".java") )
 			bin();
 		
-//		setPasv();
 		String pwd = pwd();
 		
-//		sendLine("RETR " + filename);
-//		String response = readLine();
-//		if(response.startsWith("550 ")){
-//			return false;
-//		}
-//		// The size of the download file
-//		String fileSize = null;
-//		//for tv6.sjtu.edu.cn  
-//		// 150-Accepted data connection
-//		if (!response.startsWith("150")) {
-////			throw new IOException(
-////					"FTPClient was not allowed to download the file: " + response);
-//			return false;
-//		}else{
-//			//150 Opening BINARY mode data connection for site-1.4.7.zip (10919130 bytes)
-//			// obtain the size of file
-//			int opening = response.indexOf('(');
-//			int closing = response.indexOf(')', opening + 1);
-//			if (closing > 0) {
-//				String dataLink = response.substring(opening + 1, closing);
-//				StringTokenizer tokenizer = new StringTokenizer(dataLink);
-//				try {
-//					fileSize = tokenizer.nextToken();
-//				} catch (Exception e) {
-//					throw new IOException(
-//							"FTPClient received bad data link information: "
-//									+ response);
-//				}
-//			}
-//		}
-		
-//		BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(new File(localWD, filename)));
-//
-//		BufferedInputStream input = new BufferedInputStream(dataSocket
-//				.getInputStream());
-//		byte[] buffer = new byte[4096];
-//		int bytesRead = 0;
-//		while ((bytesRead = input.read(buffer)) != -1) {
-//			output.write(buffer, 0, bytesRead);
-//		}
-//		output.flush();
-//		output.close();
-//		input.close();
-
-//		DownloadThread dt = new DownloadThread(new File(localWD, filename), dataSocket);
-//		dt.start();
-//		response = readLine();
-//		// For tv6.sjtu.edu.cn  
-//		// 150 72.0 kbytes to download
-//		if(response.startsWith("150 ")){
-//			response = readLine();
-//		}
-//		//for tv6.sjtu.edu.cn  
-//		// 226-File successfully transferred
-//		return (response.startsWith("226"));
 		
 		int fileLength = getFileSize(filename);
+		if(fileLength <= 0)
+		{
+			return false;
+		}
+		if(fileLength <= fileSlice){
+			setPasv();
+			sendLine("RETR " + filename);
+			String response = readLine();
+			if(response.startsWith("550 ")){
+				return false;
+			}
+			// The size of the download file
+			String fileSize = null;
+			//for tv6.sjtu.edu.cn  
+			// 150-Accepted data connection
+			if (!response.startsWith("150")) {
+//				throw new IOException(
+//						"FTPClient was not allowed to download the file: " + response);
+				return false;
+			}
+			SingleDownloadThread dt = new SingleDownloadThread(new File(localWD, filename), dataSocket, this);
+			dt.start();
+			
+	        synchronized (this){
+	        	while(SIGNAL != 0){
+	        		try {
+						this.wait();
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+	        	}
+	        }
+			
+			response = readLine();
+			// For tv6.sjtu.edu.cn  
+			// 150 72.0 kbytes to download
+			if(response.startsWith("150 ")){
+				response = readLine();
+			}
+			//for tv6.sjtu.edu.cn  
+			// 226-File successfully transferred
+			return (response.startsWith("226"));
+
+		}
+		
+		// else for the split download
+		
 		int threadNumber = fileLength / fileSlice + 1;
+		
+        START_DOWNLOAD = true;
+        START_MERGE = true;
+        
         for (int i=0; i< threadNumber; i++) {
             int length = fileSlice;
             if (i == threadNumber - 1) {
@@ -539,9 +535,7 @@ public class FTPClient {
             dt.setLocalFile(new File(localWD, filename + ".part" + i));
             dt.setRemoteFile(pwd, filename);
             dt.start();
-            SIGNAL ++;
-            START_DOWNLOAD = true;
-            START_MERGE = true;
+//            SIGNAL ++;
         }
 
         MergeFile mf = new MergeFile(threadNumber, localWD, filename, this);
@@ -557,14 +551,6 @@ public class FTPClient {
         	}
         }
         
-//		while(START_MERGE){
-//			try {
-//				Thread.sleep(1000);
-//			} catch (InterruptedException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
-//		}
 		return true;
 	}
 	
@@ -749,6 +735,12 @@ public class FTPClient {
 		synchronized(this){
 			SIGNAL--;
 			this.notify();
+		}
+	}
+	
+	public void incDownloadThread(){
+		synchronized(this){
+			SIGNAL ++;
 		}
 	}
 	

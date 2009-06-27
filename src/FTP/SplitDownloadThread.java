@@ -36,6 +36,7 @@ public class SplitDownloadThread extends Thread {
 		System.out.println("线程" + this.getId() + "开始下载");
 
 //		FTPClient.SIGNAL++;
+		ftpClient.incDownloadThread();
 
 		FTPClient client = new FTPClient();
 //		int singal = FTPClient.SIGNAL;

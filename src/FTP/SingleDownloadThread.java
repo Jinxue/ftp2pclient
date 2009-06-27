@@ -7,20 +7,23 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 
-public class DownloadThread extends Thread {
+public class SingleDownloadThread extends Thread {
 
 	private File localFile;
 	private Socket dataSocket;
+	private FTPClient ftpClient;
 
-	public DownloadThread(File file, Socket socket) {
+	public SingleDownloadThread(File file, Socket socket, FTPClient ftp) {
 		this.localFile = file;
 		this.dataSocket = socket;
+        this.ftpClient = ftp;
 	}
 
 	public void run() {
 		System.out.println("线程" + this.getId() + "开始下载");
 
 //		FTPClient.SIGNAL++;
+		ftpClient.incDownloadThread();
 
 		try {
 			BufferedOutputStream output = new BufferedOutputStream(
@@ -42,6 +45,7 @@ public class DownloadThread extends Thread {
 			e.printStackTrace();
 		}
 //		FTPClient.SIGNAL --;
+		ftpClient.downloadDone();
 		System.out.println("线程" + this.getId() + "已经完成");
 
 	}

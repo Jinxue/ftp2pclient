@@ -1,6 +1,7 @@
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
+import java.net.MalformedURLException;
 import java.net.URL;
 
 import javax.swing.ImageIcon;
@@ -25,16 +26,20 @@ public class Ftp2pClient extends JFrame {
 //        super(new GridLayout(1, 1));
         
         mainPane = new JTabbedPane();
-        ImageIcon icon = createImageIcon("..\\icon.png");
+        String currentPath = System.getProperty("user.dir");
+        System.out.println(currentPath);
+//        ImageIcon icon = createImageIcon("/icon.png");
         
         FTPFrame panel1 = new FTPFrame();
-        mainPane.addTab("FTP Client", icon, panel1.getContentPane(),
-                "A FTP Client");
+//        mainPane.addTab("FTP Client", icon, panel1.getContentPane(),
+//                "A FTP Client");
+        mainPane.addTab("FTP Client", panel1.getContentPane());
         mainPane.setMnemonicAt(0, KeyEvent.VK_1);
         
         InitFrame panel2 = new InitFrame();
-        mainPane.addTab("P2P Client", icon, panel2.getContentPane(),
-                "A P2P Client");
+//        mainPane.addTab("P2P Client", icon, panel2.getContentPane(),
+//                "A P2P Client");
+        mainPane.addTab("P2P Client", panel2.getContentPane());
         mainPane.setMnemonicAt(1, KeyEvent.VK_2);
         
         //Add the tabbed pane to this panel.
@@ -54,8 +59,15 @@ public class Ftp2pClient extends JFrame {
 	}
 	
     /** Returns an ImageIcon, or null if the path was invalid. */
-    protected static ImageIcon createImageIcon(String path) {
-        URL imgURL = Ftp2pClient.class.getResource(path);
+    protected ImageIcon createImageIcon(String path) {
+        URL imgURL = this.getClass().getResource(path);
+//    	URL imgURL = null;
+//		try {
+//			imgURL = new URL(path);
+//		} catch (MalformedURLException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
         if (imgURL != null) {
             return new ImageIcon(imgURL);
         } else {
