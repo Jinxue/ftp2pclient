@@ -38,7 +38,7 @@ public class FTPClient {
 	
 	// If the file is small than leastFileSlice, there is not necessary to split
 	private final static int leastFileSlice = 10 * 1024 * 1024;
-	private final static int downloadThreadNum = 5;
+	private final static int downloadThreadNum = 1;
 	public Integer SIGNAL = 0;
 	public Boolean START_DOWNLOAD = false;
 	public Boolean START_MERGE = false;
@@ -473,13 +473,21 @@ public class FTPClient {
 		
 		String pwd = pwd();
 		
+		// Test if the server supports REST
+		boolean restart = restart(10);
+		if(restart)
+			abort();
 		
 		int fileLength = getFileSize(filename);
 		if(fileLength <= 0)
 		{
 			return false;
 		}
-		if(fileLength <= leastFileSlice){
+		
+		long begin = System.nanoTime();
+		
+//		if(fileLength <= leastFileSlice + 1024 * 1024 * 1024){
+		if(!restart || downloadThreadNum == 1|| fileLength <= leastFileSlice){
 			setPasv();
 			sendLine("RETR " + filename);
 			String response = readLine();
@@ -515,6 +523,10 @@ public class FTPClient {
 			if(response.startsWith("150 ")){
 				response = readLine();
 			}
+
+			double temp = (System.nanoTime() - begin) / 1000000000.0 ;
+			System.out.println("********** File Size: " + fileLength + " Used time: " + temp + " *************");
+
 			//for tv6.sjtu.edu.cn  
 			// 226-File successfully transferred
 			return (response.startsWith("226"));
@@ -556,6 +568,8 @@ public class FTPClient {
 				}
         	}
         }
+		double temp = (System.nanoTime() - begin) / 1000000000.0 ;
+		System.out.println("********** File Size: " + fileLength + " Used time: " + temp + " *************");
         
 		return true;
 	}
@@ -566,6 +580,7 @@ public class FTPClient {
 		
 		if(!response.startsWith("350 ")){
 			// The server does not support restart
+			//501 REST：在ASCII模式下不允许断点续传
 			return false;
 		}
 		return true;
@@ -660,7 +675,7 @@ public class FTPClient {
 	/**
 	 * Tell the server to abort the previous command and data transmission related
 	 */
-	public boolean abort(String dir) throws IOException{
+	public boolean abort() throws IOException{
 		sendLine("ABOR");
 		String response = readLine();
 		return (response.startsWith("250 "));
