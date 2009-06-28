@@ -33,6 +33,7 @@ public class MergeFile extends Thread {
 				}
     		}
     	}
+		long begin = System.nanoTime();
     	
         try {
             System.out.println("文件开始合并");
@@ -56,7 +57,10 @@ public class MergeFile extends Thread {
 
             e.printStackTrace();
         }
-        
+   
+		double temp = (System.nanoTime() - begin) / 1000000000.0 ;
+		System.out.println("********** File name: " + fileName + " Used time: " + temp + " *************");
+
         synchronized (ftpClient){
         	ftpClient.START_DOWNLOAD = false;	
         }
